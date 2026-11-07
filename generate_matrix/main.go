@@ -1,66 +1,38 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
-	"math/rand/v2"
-	"os"
 	"strconv"
 	"strings"
 )
 
-func randRange(min, max int) int {
-	return rand.IntN(max-min) + min
-}
-
-func writeMatrixToTxtFile(filename string, matrix [][]int, delimeter string) error {
-	_, statErr := os.Stat(filename)
-	fileExists := statErr == nil
-
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to create/open file: %s", err)
-	}
-	defer file.Close()
-
-	w := bufio.NewWriter(file)
-	if fileExists {
-		_, err := w.WriteString("\n")
-		if err != nil {
-			return fmt.Errorf("failed to write separator newline: %w", err)
-		}
-	}
-
-	for _, row := range matrix {
-		for j, val := range row {
-			_, err := w.WriteString(strconv.Itoa(val))
-			if err != nil {
-				return fmt.Errorf("failed to write value: %s", err)
-			}
-
-			if j < len(row)-1 {
-				_, err := w.WriteString(delimeter)
-				if err != nil {
-					return fmt.Errorf("failed to write delimeter: %s", err)
-				}
-			}
-		}
-
-		_, err = w.WriteString("\n")
-		if err != nil {
-			return fmt.Errorf("failed to write newline: %s", err)
-		}
-	}
-
-	if err := w.Flush(); err != nil {
-		return fmt.Errorf("failed to flush buffer: %s", err)
-	}
-	return nil
+type Config struct {
+	n          int
+	m          int
+	lowerBound int
+	upperBound int
+	filename   string
 }
 
 func main() {
+	cfg, err := ParseAndValidateFlags()
+	if err != nil {
+		log.Fatalf("failed to parse and validate flags: %s", err)
+	}
+
+	matrix := generateMatrix(cfg.n, cfg.m, cfg.lowerBound, cfg.upperBound)
+
+	err = writeMatrixToTxtFile(cfg.filename, matrix, " ")
+	if err != nil {
+		log.Fatalf("failed to write to matrix: %s", err)
+	}
+
+	fmt.Println(matrix)
+}
+
+func ParseAndValidateFlags() (Config, error) {
 	nPtr := flag.Int("n", 0, "n dimension")
 	mPtr := flag.Int("m", 0, "m dimension")
 	rangePtr := flag.String("range", "", "range of values e.g. a,b")
@@ -68,32 +40,40 @@ func main() {
 
 	flag.Parse()
 
-	n := *nPtr
-	m := *mPtr
+	if *nPtr <= 0 || *mPtr <= 0 {
+		return Config{}, fmt.Errorf("-n and -m dimensions must be integers greater than 0")
+	}
+	if *filePtr == "" {
+		return Config{}, fmt.Errorf("target file path (-f) is required")
+	}
+	if *rangePtr == "" {
+		return Config{}, fmt.Errorf("value range (-range) is required")
+	}
 
 	splitRange := strings.Split(*rangePtr, ",")
+	if len(splitRange) != 2 {
+		return Config{}, fmt.Errorf("invalid range format; expected 'min,max' (e.g. 5,20)")
+	}
 
 	lowerBound, err := strconv.Atoi(splitRange[0])
 	if err != nil {
-		log.Fatalf("failed to convert to int: %s", err)
+		return Config{}, fmt.Errorf("invalid minimum range value %q: %w", splitRange[0], err)
 	}
+
 	upperBound, err := strconv.Atoi(splitRange[1])
 	if err != nil {
-		log.Fatalf("failed to convert to int: %s", err)
+		return Config{}, fmt.Errorf("invalid maximum range value %q: %w", splitRange[1], err)
 	}
 
-	matrix := make([][]int, n)
-	for i := range matrix {
-		matrix[i] = make([]int, m)
-		for j := range matrix[i] {
-			matrix[i][j] = randRange(lowerBound, upperBound)
-		}
+	if lowerBound >= upperBound {
+		return Config{}, fmt.Errorf("minimum range bound (%d) must be strictly less than maximum bound (%d)", lowerBound, upperBound)
 	}
 
-	err = writeMatrixToTxtFile(*filePtr, matrix, " ")
-	if err != nil {
-		log.Fatalf("failed to write to matrix: %s", err)
-	}
-
-	fmt.Println(matrix)
+	return Config{
+		n:          *nPtr,
+		m:          *mPtr,
+		lowerBound: lowerBound,
+		upperBound: upperBound,
+		filename:   *filePtr,
+	}, err
 }
