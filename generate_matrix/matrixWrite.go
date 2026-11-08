@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func writeMatrixToTxtFile(filename string, matrix [][]int, delimeter string) error {
+func writeMatrixToTxtFile(filename string, matrix [][]int, delimeter string, n, m int) error {
 	_, statErr := os.Stat(filename)
 	fileExists := statErr == nil
 
@@ -23,6 +23,11 @@ func writeMatrixToTxtFile(filename string, matrix [][]int, delimeter string) err
 		if err != nil {
 			return fmt.Errorf("failed to write separator newline: %w", err)
 		}
+	}
+
+	_, err = fmt.Fprintf(w, "N=%d, M=%d\n", n, m)
+	if err != nil {
+		return fmt.Errorf("failed to write matrix information: %s", err)
 	}
 
 	for _, row := range matrix {

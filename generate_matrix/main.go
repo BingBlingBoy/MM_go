@@ -24,12 +24,10 @@ func main() {
 
 	matrix := generateMatrix(cfg.n, cfg.m, cfg.lowerBound, cfg.upperBound)
 
-	err = writeMatrixToTxtFile(cfg.filename, matrix, " ")
+	err = writeMatrixToTxtFile(cfg.filename, matrix, " ", cfg.n, cfg.m)
 	if err != nil {
 		log.Fatalf("failed to write to matrix: %s", err)
 	}
-
-	fmt.Println(matrix)
 }
 
 func ParseAndValidateFlags() (Config, error) {
