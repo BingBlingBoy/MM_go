@@ -39,6 +39,17 @@ func AddMatrix(N, M int, scanner *bufio.Scanner) [][]int {
 	return mat
 }
 
+func parseMetadata(line string) (int, int, error) {
+	var n, m int
+
+	_, err := fmt.Sscanf(line, "N=%d, M=%d", &n, &m)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid matrix header format: %w", err)
+	}
+
+	return n, m, nil
+}
+
 func main() {
 	filePtr := flag.String("f", "", "filename")
 	flag.Parse()
@@ -50,10 +61,8 @@ func main() {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	var N, M int
-	var matOne [][]int
-	var matTwo [][]int
-	twoYet := false
+
+	var matrices [][][]int
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -63,32 +72,13 @@ func main() {
 		}
 
 		if strings.Contains(line, "N") {
-			matInfo := strings.Split(line, ",")
-			if len(matInfo) < 2 {
-				log.Fatalf("invalid metadata line: %s", line)
-			}
-
-			cleanN := strings.ReplaceAll(matInfo[0], " ", "")
-			cleanN = strings.ReplaceAll(cleanN, "N=", "")
-			N, err = strconv.Atoi(cleanN)
+			n, m, err := parseMetadata(line)
 			if err != nil {
-				log.Fatalf("failed to parse N: %s", err)
+				log.Fatalf("error parsing metadata: %s", err)
 			}
 
-			cleanM := strings.ReplaceAll(matInfo[1], " ", "")
-			cleanM = strings.ReplaceAll(cleanM, "M=", "")
-			M, err = strconv.Atoi(cleanM)
-			if err != nil {
-				log.Fatalf("failed to parse M: %s", err)
-			}
-
-			if !twoYet {
-				matOne = AddMatrix(N, M, scanner)
-				twoYet = true
-			} else {
-				matTwo = AddMatrix(N, M, scanner)
-			}
-
+			mat := AddMatrix(n, m, scanner)
+			matrices = append(matrices, mat)
 		}
 	}
 
@@ -96,6 +86,7 @@ func main() {
 		log.Fatalf("error reading file: %s", err)
 	}
 
-	fmt.Println(matOne)
-	fmt.Println(matTwo)
+	for i, mat := range matrices {
+		fmt.Printf("Matrix %d:\n%v\n", i+1, mat)
+	}
 }
