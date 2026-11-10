@@ -1,4 +1,4 @@
-package main
+package matrix
 
 import (
 	"fmt"
@@ -49,7 +49,7 @@ func MultiplyMatrix(matrices [][][]int) ([][]int, error) {
 	resQ, resR := len(matTwo[0]), len(matTwo)
 
 	if resM != resR {
-		return nil, fmt.Errorf("cannot multiply matrice: inner dimensions mismatch (%dx%d and %dx%d)", resN, resM, resQ, resR)
+		return nil, fmt.Errorf("cannot multiply matrices: inner dimensions mismatch (%dx%d and %dx%d)", resN, resM, resQ, resR)
 	}
 
 	resMat := make([][]int, resN)

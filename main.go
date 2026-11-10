@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	mat "ckdb/matrix"
 	"flag"
 	"fmt"
 	"log"
@@ -30,7 +31,7 @@ func main() {
 		}
 
 		if strings.Contains(line, "N") {
-			n, m, err := ParseMetadata(line)
+			n, m, err := mat.ParseMetadata(line)
 			if err != nil {
 				log.Fatalf("error parsing metadata: %s", err)
 			}
@@ -43,7 +44,7 @@ func main() {
 				rawRows = append(rawRows, scanner.Text())
 			}
 
-			mat, err := ParseMatrix(rawRows, n, m)
+			mat, err := mat.ParseMatrix(rawRows, n, m)
 			if err != nil {
 				log.Fatalf("failed to build matrix: %s", err)
 			}
@@ -54,7 +55,7 @@ func main() {
 		log.Fatalf("error reading file: %s", err)
 	}
 
-	res, err := MultiplyMatrix(matrices)
+	res, err := mat.MultiplyMatrix(matrices)
 	if err != nil {
 		log.Fatalf("error multiplying matrix: %s", err)
 	}
