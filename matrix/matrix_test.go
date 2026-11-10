@@ -70,6 +70,24 @@ func TestBasicMatMult(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "Multiplication with negative values, zeroes, and larger values",
+			matrices: [][][]int{
+				{
+					{0, -2},
+					{10, 5},
+				},
+				{
+					{3, 4},
+					{-1, 0},
+				},
+			},
+			want: [][]int{
+				{2, 0},
+				{25, 40},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -131,6 +149,17 @@ func TestParseMatrix(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "Successful parse with column truncation",
+			row:  []string{"1 2 999", "3 4 888"},
+			n:    2,
+			m:    2,
+			want: [][]int{
+				{1, 2},
+				{3, 4},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -176,6 +205,13 @@ func TestParseMetadata(t *testing.T) {
 			wantN:   0,
 			wantM:   0,
 			wantErr: true,
+		},
+		{
+			name:    "Validation Warning: Negative dimensions parsed",
+			line:    "N=-3, M=-2",
+			wantN:   -3,
+			wantM:   -2,
+			wantErr: false,
 		},
 	}
 
