@@ -1,9 +1,57 @@
 package matrix
 
 import (
+	"fmt"
+	"math/rand/v2"
 	"reflect"
 	"testing"
 )
+
+var benchResult [][]int
+
+func RandRange(min, max int) int {
+	return rand.IntN(max-min) + min
+}
+
+func NewRandomMatrix(size int) [][]int {
+	mat := make([][]int, size)
+
+	for i := range mat {
+		mat[i] = make([]int, size)
+		for j := range mat[i] {
+			mat[i][j] = RandRange(-10000, 10000)
+		}
+	}
+
+	return mat
+}
+
+func BenchmarkBasicMatMult(b *testing.B) {
+	sizes := []int{10, 100, 1000, 1e4}
+
+	for _, size := range sizes {
+		b.Run(fmt.Sprintf("Size-%d", size), func(b *testing.B) {
+			matrices := [][][]int{
+				NewRandomMatrix(size),
+				NewRandomMatrix(size),
+			}
+
+			var err error
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for b.Loop() {
+				benchResult, err = MultiplyMatrix(matrices)
+				if err != nil {
+					b.Fatal(err)
+				}
+			}
+
+			msPerOp := float64(b.Elapsed().Nanoseconds()) / 1e6 / float64(b.N)
+			b.ReportMetric(msPerOp, "ms/op")
+		})
+	}
+}
 
 func TestBasicMatMult(t *testing.T) {
 	tests := []struct {
