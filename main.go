@@ -55,7 +55,8 @@ func main() {
 		log.Fatalf("error reading file: %s", err)
 	}
 
-	res, err := mat.MultiplyMatrix(matrices)
+	// res, err := mat.BasicMultiplication(matrices)
+	res, err := mat.StrassensAlgorithm(matrices)
 	if err != nil {
 		log.Fatalf("error multiplying matrix: %s", err)
 	}

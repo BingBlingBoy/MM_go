@@ -41,7 +41,7 @@ func BenchmarkBasicMatMult(b *testing.B) {
 			b.ResetTimer()
 
 			for b.Loop() {
-				benchResult, err = MultiplyMatrix(matrices)
+				benchResult, err = BasicMultiplication(matrices)
 				if err != nil {
 					b.Fatal(err)
 				}
@@ -140,7 +140,7 @@ func TestBasicMatMult(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := MultiplyMatrix(tt.matrices)
+			got, err := BasicMultiplication(tt.matrices)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("MultiplyMatrix() error = %v, wantErr %v", err, tt.wantErr)
