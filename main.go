@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+// Refactor all matrices to 1D matrices
+
 type multiplyFunc func([][][]int) ([][]int, error)
 
 func main() {
@@ -37,6 +39,7 @@ func main() {
 	scanner := bufio.NewScanner(file)
 
 	var matrices [][][]int
+	var n, m int
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -45,7 +48,7 @@ func main() {
 		}
 
 		if strings.Contains(line, "N") {
-			n, m, err := mat.ParseMetadata(line)
+			n, m, err = mat.ParseMetadata(line)
 			if err != nil {
 				log.Fatalf("error parsing metadata: %s", err)
 			}
