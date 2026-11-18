@@ -16,19 +16,8 @@ type multiplyFunc func([][][]int) ([][]int, error)
 
 func main() {
 	filePtr := flag.String("f", "", "filename")
-	algPtr := flag.String("a", "", "algorithm")
 
 	flag.Parse()
-
-	algorithms := map[string]multiplyFunc{
-		"strassen": mat.StrassensAlgorithm,
-		"basic":    mat.BasicMultiplication,
-	}
-
-	fn, ok := algorithms[*algPtr]
-	if !ok {
-		log.Fatalf("unknown alogrithm: %q", *algPtr)
-	}
 
 	file, err := os.Open(*filePtr)
 	if err != nil {
@@ -38,7 +27,7 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	var matrices [][][]int
+	var matrices []mat.Matrix
 	var n, m int
 
 	for scanner.Scan() {
@@ -61,20 +50,30 @@ func main() {
 				rawRows = append(rawRows, scanner.Text())
 			}
 
-			mat, err := mat.ParseMatrix(rawRows, n, m)
+			parsed, err := mat.ParseMatrix(rawRows, n, m)
 			if err != nil {
 				log.Fatalf("failed to build matrix: %s", err)
 			}
-			matrices = append(matrices, mat)
+			matrices = append(matrices, parsed)
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatalf("error reading file: %s", err)
 	}
 
-	res, err := fn(matrices)
-	if err != nil {
-		log.Fatalf("error multiplying matrix: %s", err)
+	for _, m := range matrices {
+		for r := range m.Rows() {
+			for c := range m.Cols() {
+				fmt.Printf("%d ", m.At(r, c))
+			}
+			fmt.Println()
+		}
+		fmt.Println("-----")
 	}
-	fmt.Printf("%v\n", res)
+
+	// res, err := mat.BasicMultiplication(matrices)
+	// if err != nil {
+	// 	log.Fatalf("error multiplying matrix: %s", err)
+	// }
+	// fmt.Printf("%v\n", res)
 }
