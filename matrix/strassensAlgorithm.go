@@ -1,8 +1,7 @@
 package matrix
 
 // Only 2x2 currently
-func StrassensAlgorithm(matrices [][][]int) ([][]int, error) {
-
+func StrassensAlgorithm(matrices []Matrix) (Matrix, error) {
 	const (
 		a int = iota
 		b
@@ -14,27 +13,26 @@ func StrassensAlgorithm(matrices [][][]int) ([][]int, error) {
 		h
 	)
 
-	tempMat := make([]int, 0, 8)
-
+	temp := make([]int, 0, 8)
 	for _, mat := range matrices {
-		for i := range mat {
-			for j := range mat[i] {
-				tempMat = append(tempMat, mat[i][j])
-			}
-		}
+		temp = append(temp, mat.data...)
 	}
 
-	p1 := tempMat[a] * (tempMat[f] - tempMat[h])
-	p2 := (tempMat[a] + tempMat[b]) * tempMat[h]
-	p3 := (tempMat[c] + tempMat[d]) * tempMat[e]
-	p4 := tempMat[d] * (tempMat[g] - tempMat[e])
-	p5 := (tempMat[a] + tempMat[d]) * (tempMat[e] + tempMat[h])
-	p6 := (tempMat[b] - tempMat[d]) * (tempMat[g] + tempMat[h])
-	p7 := (tempMat[a] - tempMat[c]) * (tempMat[e] + tempMat[f])
+	p1 := temp[a] * (temp[f] - temp[h])
+	p2 := (temp[a] + temp[b]) * temp[h]
+	p3 := (temp[c] + temp[d]) * temp[e]
+	p4 := temp[d] * (temp[g] - temp[e])
+	p5 := (temp[a] + temp[d]) * (temp[e] + temp[h])
+	p6 := (temp[b] - temp[d]) * (temp[g] + temp[h])
+	p7 := (temp[a] - temp[c]) * (temp[e] + temp[f])
 
-	res := [][]int{
-		{p5 + p4 - p2 + p6, p1 + p2},
-		{p3 + p4, p1 + p5 - p3 - p7},
+	res := Matrix{
+		rows: 2,
+		cols: 2,
+		data: []int{
+			p5 + p4 - p2 + p6, p1 + p2,
+			p3 + p4, p1 + p5 - p3 - p7,
+		},
 	}
 
 	return res, nil

@@ -61,17 +61,7 @@ func main() {
 		log.Fatalf("error reading file: %s", err)
 	}
 
-	// for _, m := range matrices {
-	// 	for r := range m.Rows() {
-	// 		for c := range m.Cols() {
-	// 			fmt.Printf("%d ", m.At(r, c))
-	// 		}
-	// 		fmt.Println()
-	// 	}
-	// 	fmt.Println("-----")
-	// }
-
-	res, err := mat.BasicMultiplication(matrices)
+	res, err := mat.StrassensAlgorithm(matrices)
 	if err != nil {
 		log.Fatalf("error multiplying matrix: %s", err)
 	}
