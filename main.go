@@ -12,12 +12,23 @@ import (
 
 // Refactor all matrices to 1D matrices
 
-type multiplyFunc func([][][]int) ([][]int, error)
+type multiplyFunc func([]mat.Matrix) (mat.Matrix, error)
 
 func main() {
 	filePtr := flag.String("f", "", "filename")
+	algPtr := flag.String("a", "", "algorithm")
 
 	flag.Parse()
+
+	algorithms := map[string]multiplyFunc{
+		"strassen": mat.StrassensAlgorithm,
+		"basic":    mat.BasicMultiplication,
+	}
+
+	fn, ok := algorithms[*algPtr]
+	if !ok {
+		log.Fatalf("unknown alogrithm: %q", *algPtr)
+	}
 
 	file, err := os.Open(*filePtr)
 	if err != nil {
@@ -61,7 +72,7 @@ func main() {
 		log.Fatalf("error reading file: %s", err)
 	}
 
-	res, err := mat.StrassensAlgorithm(matrices)
+	res, err := fn(matrices)
 	if err != nil {
 		log.Fatalf("error multiplying matrix: %s", err)
 	}
