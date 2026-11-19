@@ -20,6 +20,10 @@ func (m Matrix) Set(r, c, val int) {
 	m.data[r*m.cols+c] = val
 }
 
+func (m Matrix) Add(r, c, val int) {
+	m.data[r*m.cols+c] += val
+}
+
 func (m Matrix) Rows() int { return m.rows }
 func (m Matrix) Cols() int { return m.cols }
 
