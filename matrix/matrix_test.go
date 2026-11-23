@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"reflect"
+	"strings"
 	"testing"
 )
 
-var benchResult [][]int
+var benchResult Matrix
 
 func RandRange(min, max int) int {
 	return rand.IntN(max-min) + min
 }
 
-func NewRandomMatrix(size int) [][]int {
-	mat := make([][]int, size)
+func NewRandomMatrix(size int) []int {
+	mat := make([]int, size*size)
 
-	for i := range mat {
-		mat[i] = make([]int, size)
-		for j := range mat[i] {
-			mat[i][j] = RandRange(-10000, 10000)
+	for i := range size {
+		for j := range size {
+			mat[i*size+j] = RandRange(-10000, 10000)
 		}
 	}
 
@@ -27,13 +27,21 @@ func NewRandomMatrix(size int) [][]int {
 }
 
 func BenchmarkBasicMatMult(b *testing.B) {
-	sizes := []int{10, 100, 1000, 1e4}
+	sizes := []int{10, 100, 1000}
 
 	for _, size := range sizes {
 		b.Run(fmt.Sprintf("Size-%d", size), func(b *testing.B) {
-			matrices := [][][]int{
-				NewRandomMatrix(size),
-				NewRandomMatrix(size),
+			matrices := []Matrix{
+				{
+					rows: size,
+					cols: size,
+					data: NewRandomMatrix(size),
+				},
+				{
+					rows: size,
+					cols: size,
+					data: NewRandomMatrix(size),
+				},
 			}
 
 			var err error
@@ -56,83 +64,96 @@ func BenchmarkBasicMatMult(b *testing.B) {
 func TestBasicMatMult(t *testing.T) {
 	tests := []struct {
 		name        string
-		matrices    [][][]int
-		want        [][]int
+		matrices    []Matrix
+		want        Matrix
 		wantErr     bool
 		errContains string
 	}{
 		{
 			name: "Successful 2x2 multiplication",
-			matrices: [][][]int{
+			matrices: []Matrix{
 				{
-					{1, 2},
-					{3, 4},
+					rows: 2,
+					cols: 2,
+					data: []int{1, 2, 3, 4},
 				},
 				{
-					{5, 6},
-					{7, 8},
+					rows: 2,
+					cols: 2,
+					data: []int{5, 6, 7, 8},
 				},
 			},
-			want: [][]int{
-				{19, 22},
-				{43, 50},
+			want: Matrix{
+				rows: 2,
+				cols: 2,
+				data: []int{19, 22, 43, 50},
 			},
 			wantErr: false,
 		},
 		{
 			name: "Error: less than 2 matrices passed",
-			matrices: [][][]int{
+			matrices: []Matrix{
 				{
-					{1, 2},
-					{3, 4},
+					rows: 2,
+					cols: 2,
+					data: []int{19, 22, 43, 50},
 				},
 			},
-			want:    nil,
+			want:    Matrix{},
 			wantErr: true,
 		},
 		{
 			name: "Error: matrices cannot contain empty dimensions",
-			matrices: [][][]int{
+			matrices: []Matrix{
 				{
-					{},
+					rows: 0,
+					cols: 0,
+					data: []int{},
 				},
 				{
-					{},
+					rows: 0,
+					cols: 0,
+					data: []int{},
 				},
 			},
-			want:    nil,
+			want:    Matrix{},
 			wantErr: true,
 		},
 		{
 			name: "Error: inner dimension mismatch",
-			matrices: [][][]int{
+			matrices: []Matrix{
 				{
-					{2, 4},
-					{1, 4},
-					{3, 4},
+					rows: 3,
+					cols: 2,
+					data: []int{2, 4, 1, 4, 3, 4},
 				},
 				{
-					{2, 1},
+					rows: 1,
+					cols: 2,
+					data: []int{2, 1},
 				},
 			},
-			want:    nil,
+			want:    Matrix{},
 			wantErr: true,
 		},
 		{
 			name: "Multiplication with negative values, zeroes, and larger values",
-			matrices: [][][]int{
+			matrices: []Matrix{
 				{
-					{0, -2},
-					{10, 5},
+					rows: 2,
+					cols: 2,
+					data: []int{0, -2, 10, 5},
 				},
 				{
-					{3, 4},
-					{-1, 0},
+					rows: 2,
+					cols: 2,
+					data: []int{3, 4, -1, 0},
 				},
 			},
-			want: [][]int{
-				{2, 0},
-				{25, 40},
+			want: Matrix{
+				rows: 2,
+				cols: 2,
+				data: []int{2, 0, 25, 40},
 			},
 			wantErr: false,
 		},
@@ -143,11 +164,15 @@ func TestBasicMatMult(t *testing.T) {
 			got, err := BasicMultiplication(tt.matrices)
 
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("MultiplyMatrix() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("BasicMultiplication() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if tt.wantErr && tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("BasicMultiplication() error = %q, want it to contain %q", err.Error(), tt.errContains)
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MultiplyMatrix() got = %v, want %v", got, tt.want)
+				t.Errorf("BasicMultiplication() got = %+v, want %+v", got, tt.want)
 			}
 		})
 	}
@@ -159,7 +184,7 @@ func TestParseMatrix(t *testing.T) {
 		row     []string
 		n       int
 		m       int
-		want    [][]int
+		want    Matrix
 		wantErr bool
 	}{
 		{
@@ -167,9 +192,10 @@ func TestParseMatrix(t *testing.T) {
 			row:  []string{"1 2", "3 4"},
 			n:    2,
 			m:    2,
-			want: [][]int{
-				{1, 2},
-				{3, 4},
+			want: Matrix{
+				rows: 2,
+				cols: 2,
+				data: []int{1, 2, 3, 4},
 			},
 			wantErr: false,
 		},
@@ -178,7 +204,7 @@ func TestParseMatrix(t *testing.T) {
 			row:     []string{"1 2", "3 4"},
 			n:       2,
 			m:       3,
-			want:    nil,
+			want:    Matrix{},
 			wantErr: true,
 		},
 		{
@@ -186,7 +212,7 @@ func TestParseMatrix(t *testing.T) {
 			row:     []string{"1 2"},
 			n:       2,
 			m:       2,
-			want:    nil,
+			want:    Matrix{},
 			wantErr: true,
 		},
 		{
@@ -194,7 +220,7 @@ func TestParseMatrix(t *testing.T) {
 			row:     []string{"1 broken", "3 4"},
 			n:       2,
 			m:       2,
-			want:    nil,
+			want:    Matrix{},
 			wantErr: true,
 		},
 		{
@@ -202,9 +228,10 @@ func TestParseMatrix(t *testing.T) {
 			row:  []string{"1 2 999", "3 4 888"},
 			n:    2,
 			m:    2,
-			want: [][]int{
-				{1, 2},
-				{3, 4},
+			want: Matrix{
+				rows: 2,
+				cols: 2,
+				data: []int{1, 2, 3, 4},
 			},
 			wantErr: false,
 		},
