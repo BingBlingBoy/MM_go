@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-// Refactor all matrices to 1D matrices
-
 type multiplyFunc func([]mat.Matrix) (mat.Matrix, error)
 
 func main() {
